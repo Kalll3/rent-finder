@@ -1,0 +1,43 @@
+import streamlit as st
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
+import pandas as pd
+
+# Rental item data
+rental_items = [
+    {"name": "Room A", "lat": 3.7281, "lon": 103.1284, "desc": "Near UMPSA"},
+    {"name": "Room B", "lat": 3.7551, "lon": 103.1220, "desc": "With AC and Wifi"},
+    {"name": "Room C", "lat": 3.7900, "lon": 103.1500, "desc": "Near shoplots"},
+    {"name": "Room D", "lat": 3.7100, "lon": 103.1200, "desc": "Cheapest Room"},
+]
+
+# UI Start
+st.title("🏠 Rent Finder")
+
+location = st.text_input("📍 Enter your location (e.g. UMPSA Pekan):")
+radius = st.slider("📏 Search radius (in km)", 1, 20, 5)
+
+if location:
+    geolocator = Nominatim(user_agent="rent_app")
+    user_loc = geolocator.geocode(location)
+
+    if user_loc:
+        user_point = (user_loc.latitude, user_loc.longitude)
+        st.map(pd.DataFrame([{"lat": user_loc.latitude, "lon": user_loc.longitude}]))
+
+        nearby_items = []
+        for item in rental_items:
+            item_point = (item["lat"], item["lon"])
+            distance = geodesic(user_point, item_point).km
+            if distance <= radius:
+                item["distance_km"] = round(distance, 2)
+                nearby_items.append(item)
+
+        if nearby_items:
+            st.subheader("🏡 Rentals Found:")
+            for item in nearby_items:
+                st.success(f"{item['name']} - {item['desc']} ({item['distance_km']} km away)")
+        else:
+            st.warning("No rental items found within the selected radius.")
+    else:
+        st.error("Location not found. Try a more specific name.")
