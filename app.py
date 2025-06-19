@@ -5,6 +5,24 @@ import pandas as pd
 import requests
 from datetime import datetime
 
+def get_location_by_ip():
+    try:
+        response = requests.get("https://ipinfo.io/json")
+        if response.status_code == 200:
+            data = response.json()
+            loc = data.get("loc", "")  # "lat,lon"
+            lat, lon = loc.split(",") if loc else ("", "")
+            return {
+                "city": data.get("city", ""),
+                "region": data.get("region", ""),
+                "country": data.get("country", ""),
+                "lat": float(lat) if lat else None,
+                "lon": float(lon) if lon else None,
+            }
+    except Exception as e:
+        print("IP location error:", e)
+    return None
+
 def get_local_time(timezone: str):
     """
     Get current time from WorldTimeAPI by timezone string.
