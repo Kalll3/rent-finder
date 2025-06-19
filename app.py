@@ -5,34 +5,6 @@ import pandas as pd
 import requests
 from datetime import datetime
 
-def get_location_by_ip():
-    try:
-        response = requests.get("https://ipapi.co/json/")
-        if response.status_code == 200:
-            data = response.json()
-            city = data.get("city")
-            if city:
-                return {
-                    "city": city,
-                    "region": data.get("region"),
-                    "country": data.get("country_name"),
-                    "lat": float(data.get("latitude")),
-                    "lon": float(data.get("longitude")),
-                    "timezone": data.get("timezone")
-                }
-    except Exception as e:
-        print("IP Geolocation error:", e)
-    
-    # fallback to Pekan, Malaysia with timezone Asia/Kuala_Lumpur
-    return {
-        "city": "Pekan",
-        "region": "Pahang",
-        "country": "Malaysia",
-        "lat": 3.4856,
-        "lon": 103.4328,
-        "timezone": "Asia/Kuala_Lumpur"
-    }
-
 def get_local_time(timezone: str):
     """
     Get current time from WorldTimeAPI by timezone string.
