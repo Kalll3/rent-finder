@@ -27,6 +27,54 @@ def get_weather(lat, lon):
     else:
         return None
 
+rental_items = [
+    {
+        "name": "📷 Camera",
+        "location": "Kampung Ketepang Tengah",
+        "lat": 3.5173,
+        "lon": 103.4262,
+        "price": 200,
+        "image": "https://i.ebayimg.com/images/g/sOwAAOSwBr1kWZ3e/s-l1200.jpg",
+        "contact": "https://wa.me/60148190876?text=Hi%2C%20I%20want%20to%20rent%20your%20Camera"
+    },
+    {
+        "name": "🔨 Hammer",
+        "location": "Taman Permata",
+        "lat": 3.5225,
+        "lon": 103.4185,
+        "price": 50,
+        "image": "https://www.qualtry.com/cdn/shop/products/CU7B9350_staged_800x.jpg?v=1666289440",
+        "contact": "https://wa.me/60148190876?text=Hi%2C%20I%20want%20to%20rent%20your%20Hammer"
+    },
+    {
+        "name": "📸 Tripod",
+        "location": "Taman Harmoni",
+        "lat": 3.5068,
+        "lon": 103.4299,
+        "price": 20,
+        "image": "https://i.ebayimg.com/images/g/z0oAAOSwKx9e27sQ/s-l400.jpg",
+        "contact": "https://wa.me/60148190876?text=Interested%20in%20your%20Tripod%20rental"
+    },
+    {
+        "name": "🔌 Generator",
+        "location": "Pekan",
+        "lat": 3.4976,
+        "lon": 103.4246,
+        "price": 300,
+        "image": "https://d172ov9zf7ze1q.cloudfront.net/2021/06/Screenshot_20210531-235422_Chrome.jpg",
+        "contact": "mailto:jokerz1403@gmail.com?subject=Rent%20Generator"
+    },
+    {
+        "name": "⛺ Tent",
+        "location": "Kampung Padang Polo",
+        "lat": 3.4912,
+        "lon": 103.4140,
+        "price": 80,
+        "image": "https://down-my.img.susercontent.com/file/my-11134233-7r98u-ludj1z3e6tbx13",
+        "contact": "https://wa.me/60148190876?text=Interested%20in%20renting%20the%20Tent"
+    },
+]
+
 # UI
 st.set_page_config(page_title="Nearby Rentals", layout="wide")
 st.title("🔍 Find Items for Rent Near You")
