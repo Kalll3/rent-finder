@@ -7,7 +7,7 @@ import requests  # for calling weather API
 # Your rental_items list stays the same...
 
 # Add your OpenWeatherMap API key here
-OWM_API_KEY = 306e61f79b97c022b94eb5695101aceb
+OWM_API_KEY = "306e61f79b97c022b94eb5695101aceb"
 
 def get_weather(lat, lon):
     url = (
