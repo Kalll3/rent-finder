@@ -1,7 +1,7 @@
 import streamlit as st
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
-import pandas as pd
+import api.pandas as pd  # changed here
 
 # Rental items list
 rental_items = [
