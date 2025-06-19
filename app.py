@@ -2,12 +2,28 @@ import streamlit as st
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 import pandas as pd
-import requests  # for calling weather API
+import requests
 
-# Your rental_items list stays the same...
-
-# Add your OpenWeatherMap API key here
+# Your OpenWeatherMap API key (keep if you want)
 OWM_API_KEY = "1f815fe36f94a45d3fe09c4597daadc2"
+
+def get_location_by_ip():
+    try:
+        response = requests.get("https://ipapi.co/json/")
+        if response.status_code == 200:
+            data = response.json()
+            return {
+                "city": data.get("city"),
+                "region": data.get("region"),
+                "country": data.get("country_name"),
+                "lat": float(data.get("latitude")),
+                "lon": float(data.get("longitude"))
+            }
+        else:
+            return None
+    except Exception as e:
+        print("IP Geolocation error:", e)
+        return None
 
 def get_weather(lat, lon):
     url = (
@@ -75,12 +91,25 @@ rental_items = [
     },
 ]
 
-# UI
+# Streamlit UI setup
 st.set_page_config(page_title="Nearby Rentals", layout="wide")
 st.title("🔍 Find Items for Rent Near You")
 
-location = st.text_input("📍 Enter your location ( e.g. Pekan, UMPSA Pekan, Kuantan ):")
+# Get IP location info
+ip_location = get_location_by_ip()
+default_location = ip_location["city"] if ip_location and ip_location.get("city") else ""
+
+location = st.text_input("📍 Enter your location (e.g. Pekan, UMPSA Pekan, Kuantan):", value=default_location)
 radius = st.slider("📏 Search radius (in km)", 1, 20, 5)
+
+# Show detected IP location info box under slider
+if ip_location:
+    st.markdown(
+        f"**Detected Location from IP:** {ip_location['city']}, {ip_location['region']}, {ip_location['country']}  \n"
+        f"Latitude: {ip_location['lat']}, Longitude: {ip_location['lon']}"
+    )
+else:
+    st.info("Could not detect location from IP.")
 
 if location:
     geolocator = Nominatim(user_agent="rent_app")
@@ -113,7 +142,6 @@ if location:
                 nearby_items.append(item)
                 map_points.append({"lat": item["lat"], "lon": item["lon"]})
 
-        # List Items
         if nearby_items:
             st.subheader("📦 Available Items Nearby:")
             for item in nearby_items:
@@ -130,9 +158,11 @@ if location:
         else:
             st.warning("No items found within this radius.")
 
-        # Map of Nearby Items
         st.subheader("🗺️ Map of Nearby Items:")
         st.map(pd.DataFrame(map_points))
 
     else:
         st.error("Location not found. Try using a nearby place (e.g. Pekan, UMPSA).")
+
+else:
+    st.info("Please enter a location or allow location detection.")
