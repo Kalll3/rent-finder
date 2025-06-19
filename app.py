@@ -3,9 +3,7 @@ from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 import pandas as pd
 import requests
-
-# Your OpenWeatherMap API key (keep if you want)
-OWM_API_KEY = "1f815fe36f94a45d3fe09c4597daadc2"
+from datetime import datetime
 
 def get_location_by_ip():
     try:
@@ -19,37 +17,39 @@ def get_location_by_ip():
                     "region": data.get("region"),
                     "country": data.get("country_name"),
                     "lat": float(data.get("latitude")),
-                    "lon": float(data.get("longitude"))
+                    "lon": float(data.get("longitude")),
+                    "timezone": data.get("timezone")
                 }
     except Exception as e:
         print("IP Geolocation error:", e)
     
-    # fallback to Pekan if IP location not found
+    # fallback to Pekan, Malaysia with timezone Asia/Kuala_Lumpur
     return {
         "city": "Pekan",
         "region": "Pahang",
         "country": "Malaysia",
         "lat": 3.4856,
-        "lon": 103.4328
+        "lon": 103.4328,
+        "timezone": "Asia/Kuala_Lumpur"
     }
 
-def get_weather(lat, lon):
-    url = (
-        f"http://api.openweathermap.org/data/2.5/weather?"
-        f"lat={lat}&lon={lon}&appid={OWM_API_KEY}&units=metric"
-    )
-    response = requests.get(url)
-    if response.status_code == 200:
-        data = response.json()
-        weather = {
-            "temp": data["main"]["temp"],
-            "desc": data["weather"][0]["description"].title(),
-            "humidity": data["main"]["humidity"],
-            "wind_speed": data["wind"]["speed"]
-        }
-        return weather
-    else:
-        return None
+def get_local_time(timezone: str):
+    """
+    Get current time from WorldTimeAPI by timezone string.
+    Example timezone: "Asia/Kuala_Lumpur"
+    """
+    try:
+        url = f"http://worldtimeapi.org/api/timezone/{timezone}"
+        response = requests.get(url)
+        if response.status_code == 200:
+            data = response.json()
+            datetime_str = data.get("datetime")  # e.g. "2025-06-19T17:45:00.123456+08:00"
+            dt = datetime.fromisoformat(datetime_str[:-6])  # strip offset for parsing
+            formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
+            return formatted_time
+    except Exception as e:
+        print("Time API error:", e)
+    return None
 
 rental_items = [
     {
@@ -119,25 +119,19 @@ if ip_location:
 else:
     st.info("Could not detect location from IP.")
 
+# Show Malaysia local time box
+local_time = get_local_time("Asia/Kuala_Lumpur")
+if local_time:
+    st.info(f"🕒 Current Malaysia Time: **{local_time}** (Asia/Kuala_Lumpur)")
+else:
+    st.info("Could not fetch Malaysia local time.")
+
 if location:
     geolocator = Nominatim(user_agent="rent_app")
     user_loc = geolocator.geocode(location)
 
     if user_loc:
         user_point = (user_loc.latitude, user_loc.longitude)
-
-        # Show current weather at user's location
-        weather = get_weather(user_loc.latitude, user_loc.longitude)
-        if weather:
-            st.subheader("🌤️ Current Weather at Your Location:")
-            st.write(
-                f"Temperature: {weather['temp']}°C\n"
-                f"Condition: {weather['desc']}\n"
-                f"Humidity: {weather['humidity']}%\n"
-                f"Wind Speed: {weather['wind_speed']} m/s"
-            )
-        else:
-            st.info("Weather info not available right now.")
 
         nearby_items = []
         map_points = [{"lat": user_loc.latitude, "lon": user_loc.longitude}]
