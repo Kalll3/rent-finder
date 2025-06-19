@@ -12,18 +12,26 @@ def get_location_by_ip():
         response = requests.get("https://ipapi.co/json/")
         if response.status_code == 200:
             data = response.json()
-            return {
-                "city": data.get("city"),
-                "region": data.get("region"),
-                "country": data.get("country_name"),
-                "lat": float(data.get("latitude")),
-                "lon": float(data.get("longitude"))
-            }
-        else:
-            return None
+            city = data.get("city")
+            if city:
+                return {
+                    "city": city,
+                    "region": data.get("region"),
+                    "country": data.get("country_name"),
+                    "lat": float(data.get("latitude")),
+                    "lon": float(data.get("longitude"))
+                }
     except Exception as e:
         print("IP Geolocation error:", e)
-        return None
+    
+    # fallback to Pekan if IP location not found
+    return {
+        "city": "Pekan",
+        "region": "Pahang",
+        "country": "Malaysia",
+        "lat": 3.4856,
+        "lon": 103.4328
+    }
 
 def get_weather(lat, lon):
     url = (
