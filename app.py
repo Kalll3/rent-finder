@@ -2,38 +2,6 @@ import streamlit as st
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 import pandas as pd
-import requests
-from datetime import datetime
-
-# ✅ Replaced IP detection with GeoPlugin (more accurate in Malaysia)
-def get_location_by_ip():
-    try:
-        response = requests.get("http://www.geoplugin.net/json.gp")
-        if response.status_code == 200:
-            data = response.json()
-            return {
-                "city": data.get("geoplugin_city", ""),
-                "region": data.get("geoplugin_region", ""),
-                "country": data.get("geoplugin_countryName", ""),
-                "lat": float(data.get("geoplugin_latitude", 0)),
-                "lon": float(data.get("geoplugin_longitude", 0)),
-            }
-    except Exception as e:
-        print("GeoPlugin IP location error:", e)
-    return None
-
-def get_local_time(timezone: str):
-    try:
-        url = f"http://worldtimeapi.org/api/timezone/{timezone}"
-        response = requests.get(url)
-        if response.status_code == 200:
-            data = response.json()
-            datetime_str = data.get("datetime")
-            dt = datetime.fromisoformat(datetime_str[:-6])
-            return dt.strftime("%Y-%m-%d %H:%M:%S")
-    except Exception as e:
-        print("Time API error:", e)
-    return None
 
 # Rental item listings
 rental_items = [
@@ -88,32 +56,11 @@ rental_items = [
 st.set_page_config(page_title="Nearby Rentals", layout="wide")
 st.title("🔍 Find Items for Rent Near You")
 
-# Auto-detect IP location
-ip_location = get_location_by_ip()
-default_location = ip_location["city"] if ip_location and ip_location.get("city") else ""
-
-# User input section
-location = st.text_input("📍 Enter your location (e.g. Pekan, UMPSA Pekan, Kuantan):", value=default_location)
+# Manual user input
+location = st.text_input("📍 Enter your location (e.g. Pekan, UMPSA Pekan, Kuantan):")
 radius = st.slider("📏 Search radius (in km)", 1, 20, 5)
 
-# Show detected IP-based location
-if ip_location:
-    st.markdown(
-        f"**Estimated Location from IP:** {ip_location['city']}, {ip_location['region']}, {ip_location['country']}  \n"
-        f"🌐 Latitude: {ip_location['lat']}, Longitude: {ip_location['lon']}  \n"
-        f"📌 _(This may be approximate depending on your network)_"
-    )
-else:
-    st.info("Could not detect location from IP.")
-
-# Show Malaysia local time
-local_time = get_local_time("Asia/Kuala_Lumpur")
-if local_time:
-    st.info(f"🕒 Current Malaysia Time: **{local_time}** (Asia/Kuala_Lumpur)")
-else:
-    st.info("Could not fetch Malaysia local time.")
-
-# Start filtering and displaying items
+# Main logic
 if location:
     geolocator = Nominatim(user_agent="rent_app")
     user_loc = geolocator.geocode(location)
@@ -155,4 +102,4 @@ if location:
         st.error("Location not found. Try using a nearby place (e.g. Pekan, UMPSA).")
 
 else:
-    st.info("Please enter a location or allow location detection.")
+    st.info("Please enter a location to begin.")
