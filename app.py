@@ -5,42 +5,37 @@ import pandas as pd
 import requests
 from datetime import datetime
 
+# ✅ Replaced IP detection with GeoPlugin (more accurate in Malaysia)
 def get_location_by_ip():
     try:
-        response = requests.get("https://ipinfo.io/json")
+        response = requests.get("http://www.geoplugin.net/json.gp")
         if response.status_code == 200:
             data = response.json()
-            loc = data.get("loc", "")  # "lat,lon"
-            lat, lon = loc.split(",") if loc else ("", "")
             return {
-                "city": data.get("city", ""),
-                "region": data.get("region", ""),
-                "country": data.get("country", ""),
-                "lat": float(lat) if lat else None,
-                "lon": float(lon) if lon else None,
+                "city": data.get("geoplugin_city", ""),
+                "region": data.get("geoplugin_region", ""),
+                "country": data.get("geoplugin_countryName", ""),
+                "lat": float(data.get("geoplugin_latitude", 0)),
+                "lon": float(data.get("geoplugin_longitude", 0)),
             }
     except Exception as e:
-        print("IP location error:", e)
+        print("GeoPlugin IP location error:", e)
     return None
 
 def get_local_time(timezone: str):
-    """
-    Get current time from WorldTimeAPI by timezone string.
-    Example timezone: "Asia/Kuala_Lumpur"
-    """
     try:
         url = f"http://worldtimeapi.org/api/timezone/{timezone}"
         response = requests.get(url)
         if response.status_code == 200:
             data = response.json()
-            datetime_str = data.get("datetime")  # e.g. "2025-06-19T17:45:00.123456+08:00"
-            dt = datetime.fromisoformat(datetime_str[:-6])  # strip offset for parsing
-            formatted_time = dt.strftime("%Y-%m-%d %H:%M:%S")
-            return formatted_time
+            datetime_str = data.get("datetime")
+            dt = datetime.fromisoformat(datetime_str[:-6])
+            return dt.strftime("%Y-%m-%d %H:%M:%S")
     except Exception as e:
         print("Time API error:", e)
     return None
 
+# Rental item listings
 rental_items = [
     {
         "name": "📷 Camera",
@@ -89,33 +84,36 @@ rental_items = [
     },
 ]
 
-# Streamlit UI setup
+# UI setup
 st.set_page_config(page_title="Nearby Rentals", layout="wide")
 st.title("🔍 Find Items for Rent Near You")
 
-# Get IP location info
+# Auto-detect IP location
 ip_location = get_location_by_ip()
 default_location = ip_location["city"] if ip_location and ip_location.get("city") else ""
 
+# User input section
 location = st.text_input("📍 Enter your location (e.g. Pekan, UMPSA Pekan, Kuantan):", value=default_location)
 radius = st.slider("📏 Search radius (in km)", 1, 20, 5)
 
-# Show detected IP location info box under slider
+# Show detected IP-based location
 if ip_location:
     st.markdown(
-        f"**Detected Location from IP:** {ip_location['city']}, {ip_location['region']}, {ip_location['country']}  \n"
-        f"Latitude: {ip_location['lat']}, Longitude: {ip_location['lon']}"
+        f"**Estimated Location from IP:** {ip_location['city']}, {ip_location['region']}, {ip_location['country']}  \n"
+        f"🌐 Latitude: {ip_location['lat']}, Longitude: {ip_location['lon']}  \n"
+        f"📌 _(This may be approximate depending on your network)_"
     )
 else:
     st.info("Could not detect location from IP.")
 
-# Show Malaysia local time box
+# Show Malaysia local time
 local_time = get_local_time("Asia/Kuala_Lumpur")
 if local_time:
     st.info(f"🕒 Current Malaysia Time: **{local_time}** (Asia/Kuala_Lumpur)")
 else:
     st.info("Could not fetch Malaysia local time.")
 
+# Start filtering and displaying items
 if location:
     geolocator = Nominatim(user_agent="rent_app")
     user_loc = geolocator.geocode(location)
@@ -135,7 +133,7 @@ if location:
                 map_points.append({"lat": item["lat"], "lon": item["lon"]})
 
         if nearby_items:
-            st.subheader("📦 Available Items Nearby:")
+            st.subheader(f"📦 {len(nearby_items)} Item(s) Found Nearby:")
             for item in nearby_items:
                 col1, col2 = st.columns([1, 2])
                 with col1:
@@ -150,7 +148,7 @@ if location:
         else:
             st.warning("No items found within this radius.")
 
-        st.subheader("🗺️ Map of Nearby Items:")
+        st.subheader(f"🗺️ Map of Items Within {radius} km of {location}:")
         st.map(pd.DataFrame(map_points))
 
     else:
